@@ -192,7 +192,7 @@ const updateBoard = async (boardId, dispatch) => {
   const [response, responseBody] = await Network.get(
     `get-existing-board/${boardId}`
   );
-  const { red, blue, redGuesses, blueGuesses, turnCount } = responseBody;
+  const { red, blue, redGuesses, blueGuesses, turnCount, words } = responseBody;
   const allIncorrectGuesses = findIncorrectGuesses(
     red,
     blueGuesses || []
@@ -200,6 +200,7 @@ const updateBoard = async (boardId, dispatch) => {
   dispatch({
     type: 'update',
     state: {
+      words,
       localTurnCount: turnCount,
       incorrectGuesses: allIncorrectGuesses,
       redGuesses: redGuesses || [],
@@ -461,16 +462,16 @@ const PlayerBoard = ({ match }) => {
             Red cheatsheet
           </button>
         ) : (
-          <button
-            css={buttonStyle(userTeam === 'blue' && showCheatsheet)}
-            onClick={() => dispatch({ type: 'toggle_cheatsheet' })}
-          >
-            <span role="img" aria-label="Blue diamond">
-              🔷
+            <button
+              css={buttonStyle(userTeam === 'blue' && showCheatsheet)}
+              onClick={() => dispatch({ type: 'toggle_cheatsheet' })}
+            >
+              <span role="img" aria-label="Blue diamond">
+                🔷
             </span>{' '}
             Blue cheatsheet
-          </button>
-        )}
+            </button>
+          )}
 
         <button
           css={buttonStyle(editWordsMode)}

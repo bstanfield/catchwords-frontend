@@ -1,5 +1,5 @@
-// const API_URL = 'https://catchwords.herokuapp.com/api';
-const API_URL = 'http://localhost:3333/api';
+const API_URL = 'https://catchwords.herokuapp.com/api';
+// const API_URL = 'http://localhost:3333/api';
 
 function generateHeaders() {
   const headers = new Headers({

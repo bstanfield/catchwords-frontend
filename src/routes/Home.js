@@ -18,14 +18,14 @@ const centeredContainer = scale({
 });
 
 const header = scale({
-  fontFamily: 'Fira Sans, system-ui, sans-serif',
+  fontFamily: 'Work Sans, system-ui, sans-serif',
   textAlign: 'center',
   fontSize: 60,
   fontWeight: 'bold'
 });
 
 const button = scale({
-  fontFamily: 'Fira Sans, system-ui, sans-serif',
+  fontFamily: 'Work Sans, system-ui, sans-serif',
   maxWidth: 200,
   backgroundColor: colors.greenButton,
   padding: 18,
@@ -44,7 +44,7 @@ const button = scale({
 });
 
 const activeGames = scale({
-  fontFamily: 'Fira Sans, system-ui, sans-serif',
+  fontFamily: 'Work Sans, system-ui, sans-serif',
   fontSize: 20
 });
 

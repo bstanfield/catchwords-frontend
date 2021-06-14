@@ -1,5 +1,6 @@
 /** @jsx jsx */
 
+import { Fragment } from 'react';
 import { jsx } from '@emotion/core';
 import { scale } from '../style/scale';
 import { capitalizeFirst, colors } from '../helpers/util';
@@ -8,32 +9,21 @@ const cardContainer = (colorToDisplay, opacity) =>
   scale({
     width: '185px',
     height: '85px',
-    border: '1px solid #333333',
-    borderRadius: '3px',
+    border: '1px solid #BABABA',
+    borderRadius: '4px',
     backgroundColor: colorToDisplay || 'white',
     margin: '5px 5px',
-    boxShadow: '0 2px 5px 0 #cacaca',
+    boxShadow: '0 1px 6px 0 #ddd',
     color: `rgba(0,0,0,${opacity})`
   });
 
-const setCardColor = condition => {
-  switch (condition) {
-    case 0:
-      return colors.neutralCard;
-    case 1:
-      return colors.correctCard;
-    case 2:
-      return colors.assassinCard;
-    default:
-      return colors.neutralCard;
-  }
-};
-
-const cardText = size =>
+const cardText = (size, cheatsheetMode) =>
   scale({
     textAlign: 'center',
     fontSize: size || 22,
-    lineHeight: '30px'
+    lineHeight: '30px',
+    color: '#333333',
+    opacity: cheatsheetMode ? 0.5 : 1
   });
 
 const buttonStyle = selected =>
@@ -56,41 +46,73 @@ const Card = props => {
     replaceWord,
     attemptGuess,
     selected,
-    color,
     opacity,
-    addX,
-    guessing
+    guessedByUser,
+    guessedByOtherTeam,
+    guessing,
+    isUserGivingClue,
+    cardType,
+    cheatsheetMode
   } = props;
 
-  let size = 28;
+  const backgroundColor =
+    cardType === 'neutral' && !guessedByOtherTeam
+      ? colors.neutralCard
+      : cardType === 'correct' && !guessedByUser && !guessedByOtherTeam
+      ? colors.correctCard
+      : cardType === 'assassin'
+      ? colors.assassinCard
+      : 'white';
+
+  let size = 26;
   if (name) {
     if (name.length > 0 && name.length <= 8) {
-      size = 34;
+      size = 32;
     } else if (name.length > 8 && name.length <= 12) {
-      size = 28;
+      size = 26;
     } else if (name.length > 12) {
-      size = 22;
+      size = 20;
     }
   }
 
   return (
     <button
-      css={[cardContainer(color, opacity), buttonStyle(selected)]}
+      css={[
+        cardContainer(backgroundColor, opacity),
+        buttonStyle(selected),
+        isUserGivingClue && { cursor: 'not-allowed' }
+      ]}
       key={index}
-      onClick={() => {
-        guessing ? attemptGuess() : replaceWord();
-      }}
+      onClick={() =>
+        !isUserGivingClue && guessing
+          ? attemptGuess()
+          : !guessing
+          ? replaceWord()
+          : null
+      }
     >
-      <h4 css={[cardText(size)]}>{capitalizeFirst(name)}</h4>
-      {!guessing && (
-        <p style={{ position: 'absolute', bottom: 5, opacity: 0.5 }}>Swap</p>
-      )}
-      {addX && (
+      {guessedByOtherTeam && cardType === 'neutral' && (
         <strong>
-          <p css={{ position: 'absolute', top: 4, right: 8, opacity: 0.8 }}>
-            X
+          <p css={{ position: 'absolute', top: 4, left: 8, opacity: 0.6 }}>✗</p>
+        </strong>
+      )}
+      {guessedByUser || (guessedByOtherTeam && cardType === 'correct') ? (
+        <strong>
+          <p css={{ position: 'absolute', top: 4, left: 8, opacity: 0.6 }}>
+            {cardType === 'correct' ? '✓' : '✗'} {capitalizeFirst(name)}
           </p>
         </strong>
+      ) : (
+        <Fragment>
+          <h4 css={[cardText(size, cardType === 'neutral' && cheatsheetMode)]}>
+            {capitalizeFirst(name)}
+          </h4>
+          {!guessing && (
+            <p style={{ position: 'absolute', bottom: 5, opacity: 0.5 }}>
+              Swap
+            </p>
+          )}
+        </Fragment>
       )}
       {/* {correctGuessesByBlueTeam.includes(index) && <p style={{ fontSize: 10, position: 'absolute', top: 3, right: 6 }}><span>🔷</span></p>}
       {correctGuessesByRedTeam.includes(index) && <p style={{ fontSize: 10, position: 'absolute', top: 3, right: 6 }}><span>🔴</span></p>} */}

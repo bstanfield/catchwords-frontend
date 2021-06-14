@@ -10,74 +10,88 @@ const Card = ({
   index,
   state,
   handleReplaceWord,
-  handleAttemptGuess
+  handleAttemptGuess,
+  isUserGivingClue
 }) => {
-  let color = 'white';
-  let opacity = 1;
-  let addX = false;
+  let cardType = '';
+  let guessedByUser = false;
+  let guessedByOtherTeam = false;
+
   // edit this for edit words capability
+  if (
+    state.correctBlueGuesses.includes(index) ||
+    state.blueGuesses.includes(index) ||
+    state.incorrectGuesses.includes(index)
+  ) {
+    if (state.userTeam === 'blue') {
+      guessedByUser = true;
+    } else {
+      guessedByOtherTeam = true;
+    }
+  }
+
+  if (
+    state.correctRedGuesses.includes(index) ||
+    state.redGuesses.includes(index) ||
+    state.incorrectGuesses.includes(index)
+  ) {
+    if (state.userTeam === 'red') {
+      guessedByUser = true;
+    } else {
+      guessedByOtherTeam = true;
+    }
+  }
   if (state.showCheatsheet) {
     if (state.userTeam === 'red') {
       if (state.redKey[index] === 1) {
-        if (
-          state.correctBlueGuesses.includes(index) ||
-          state.correctRedGuesses.includes(index)
-        ) {
-          opacity = 0.1;
-        }
-        color = colors.correctCard;
+        cardType = 'correct';
       } else if (state.redKey[index] === 2) {
-        color = colors.assassinCard;
+        cardType = 'assassin';
       } else if (state.redKey[index] === 0) {
-        color = colors.neutralCard;
+        cardType = 'neutral';
       }
     } else if (state.userTeam === 'blue') {
       if (state.blueKey[index] === 1) {
-        color = colors.correctCard;
-        if (
-          state.correctBlueGuesses.includes(index) ||
-          state.correctRedGuesses.includes(index)
-        ) {
-          opacity = 0.1;
-        }
+        cardType = 'correct';
       } else if (state.blueKey[index] === 2) {
-        color = colors.assassinCard;
+        cardType = 'assassin';
       } else if (state.blueKey[index] === 0) {
-        color = colors.neutralCard;
+        cardType = 'neutral';
       }
     }
   } else if (
     state.correctBlueGuesses.includes(index) ||
     state.correctRedGuesses.includes(index)
   ) {
-    color = colors.correctCard;
-    opacity = 0.1;
+    cardType = 'correct';
   } else if (state.incorrectGuesses.includes(index)) {
-    color = colors.assassinCard;
-    opacity = 0.1;
+    cardType = 'assassin';
   } else if (
-    (state.redGuesses.includes(index) && state.userTeam === 'red') ||
-    (state.blueGuesses.includes(index) && state.userTeam === 'blue')
+    state.redGuesses.includes(index) ||
+    state.blueGuesses.includes(index)
   ) {
-    color = colors.neutralCard;
-    opacity = 0.1;
-  } else if (
-    (state.redGuesses.includes(index) && state.userTeam === 'blue') ||
-    (state.blueGuesses.includes(index) && state.userTeam === 'red')
-  ) {
-    addX = true;
+    cardType = 'neutral';
   }
+
+  // states:
+  // correct guess this turn - green background, little text, checkmark + name
+  // correct guess last turn - white bg, little text, checkmark + name
+  // incorrect guess - gray background, little text, x + name
+  // not guessed
+  // end game card
 
   return (
     <CardUI
+      cheatsheetMode={state.showCheatsheet}
       key={index}
       name={cardName}
-      color={color}
-      opacity={opacity}
       index={index}
       refreshCard={state.refreshCard}
       guessing={state.guessingState}
-      addX={addX}
+      isUserGivingClue={isUserGivingClue}
+      guessedByUser={guessedByUser}
+      guessedByOtherTeam={guessedByOtherTeam}
+      cardType={cardType}
       attemptGuess={() => {
         handleAttemptGuess(index);
       }}
@@ -87,7 +101,12 @@ const Card = ({
 };
 
 const Cards = props => {
-  const { state, handleAttemptGuess, handleReplaceWord } = props;
+  const {
+    state,
+    handleAttemptGuess,
+    handleReplaceWord,
+    isUserGivingClue
+  } = props;
   return (
     <div css={genericFlex}>
       {state.words.map((word, index) => (
@@ -97,6 +116,7 @@ const Cards = props => {
           state={state}
           handleReplaceWord={handleReplaceWord}
           handleAttemptGuess={handleAttemptGuess}
+          isUserGivingClue={isUserGivingClue}
         />
       ))}
     </div>

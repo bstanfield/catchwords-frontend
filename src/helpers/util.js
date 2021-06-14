@@ -16,9 +16,9 @@ export const colors = {
   errorRed: '#e93710',
   lightBorder: '#BCBCBC',
   veryLightGray: 'rgba(0,0,0,0.1)',
-  neutralCard: '#A8BAC3',
-  correctCard: '#61ea44',
-  assassinCard: '#E14938'
+  neutralCard: 'transparent',
+  correctCard: '#B7F4A9',
+  assassinCard: '#FF9F9F'
 };
 
 export const findCorrectGuesses = (teamBoard, teamGuesses) => {

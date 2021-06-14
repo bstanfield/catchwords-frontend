@@ -7,7 +7,7 @@ import { scale } from '../style/scale';
 import Network from '../helpers/network';
 
 const header = scale({
-  fontFamily: 'Fira Sans, system-ui, sans-serif',
+  fontFamily: 'Work Sans, system-ui, sans-serif',
   textAlign: 'center',
   fontSize: 36
 });

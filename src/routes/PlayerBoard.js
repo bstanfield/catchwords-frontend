@@ -4,26 +4,22 @@ import { useEffect, useReducer } from 'react';
 import { withRouter, Link } from 'react-router-dom';
 import { jsx } from '@emotion/core';
 import { scale } from '../style/scale';
-import {
-  findCorrectGuesses,
-  findIncorrectGuesses,
-  colors
-} from '../helpers/util';
+import { findCorrectGuesses, findIncorrectGuesses } from '../helpers/util';
 
 import Cards from '../components/Cards';
 import Network from '../helpers/network';
-import { array } from 'prop-types';
 
 const primaryContainer = scale({
   maxWidth: '1000px',
   color: '#333333',
   margin: 'auto',
   'h1, h2, h3, h4, p, a': {
-    fontFamily: 'Fira Sans, system-ui !important',
-    margin: 0
+    fontFamily: 'Work Sans, system-ui !important',
+    margin: 0,
+    fontWeight: 600
   },
   h4: {
-    fontWeight: 600
+    fontWeight: 500
   }
 });
 
@@ -32,7 +28,6 @@ const topContainer = scale({
   paddingTop: '12px',
   paddingBottom: '12px',
   marginBottom: '16px',
-  borderBottom: '2px solid #e0e0e0',
   display: 'flex',
   flexWrap: 'nowrap',
   justifyContent: 'space-between',
@@ -44,7 +39,7 @@ const pageFade = scale({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  backgroundColor: 'rgba(0,0,0,0.2)',
   width: '100vw',
   height: '100%',
   zIndex: 9999
@@ -56,24 +51,49 @@ const modal = scale({
   padding: '20px 40px'
 });
 
-const absolutePassTurn = guesses =>
+const turnButton = {
+  color: 'black',
+  fontWeight: 500,
+  padding: '10px 20px',
+  cursor: 'pointer',
+  borderRadius: '32px',
+  marginLeft: '16px',
+  fontSize: '22px',
+  border: '1px solid',
+  '&:hover': {
+    opacity: 0.9
+  }
+};
+
+const endTurnStyle = guesses =>
   scale({
-    backgroundColor: 'green',
-    color: 'white',
-    border: 'none',
-    padding: '10px 20px',
-    cursor: 'pointer',
-    borderRadius: '3px',
-    marginLeft: '16px',
-    fontSize: '22px',
-    opacity: guesses > 0 ? 1 : 0.5,
+    backgroundColor: guesses > 0 ? '#46F01B' : '#FFDA1B',
+    borderColor: guesses > 0 ? '#34CA0F' : '#F0CE1B',
+    boxShadow:
+      guesses > 0
+        ? '0px 4px 14px rgba(0, 255, 56, 0.44)'
+        : '0px 4px 14px rgba(253, 198, 58, 1)'
+  });
+
+const waitingStyle = scale({
+  backgroundColor: '#EAEBF2',
+  borderColor: '#CDCFDC',
+  cursor: 'not-allowed'
+});
+
+const cheatsheetButton = isSelected =>
+  scale({
+    borderRadius: '32px',
+    color: isSelected ? 'white' : '#333',
+    backgroundColor: isSelected ? '#5696F6' : 'transparent',
     '&:hover': {
-      opacity: 1
+      backgroundColor: isSelected ? '#5696F6' : '#ddd'
     }
   });
 
 const buttonStyle = isSelected =>
   scale({
+    fontWeight: 500,
     padding: '8px 18px',
     borderRadius: '3px',
     border: 'none',
@@ -86,6 +106,11 @@ const buttonStyle = isSelected =>
       opacity: isSelected ? 0.7 : 1
     }
   });
+
+const bottomBar = scale({
+  display: 'flex',
+  justifyContent: 'space-between'
+});
 
 const initialState = {
   words: [],
@@ -146,13 +171,25 @@ function boardReducer(state, action) {
   }
 }
 
-const dot = isSelected => ({
-  margin: 3,
-  backgroundColor: isSelected ? 'green' : '#ccc',
-  width: 10,
-  height: 10,
-  borderRadius: 5
+const inningRow = { display: 'flex', flexWrap: 'nowrap', alignItems: 'center' };
+
+const inning = isCurrentInning => ({
+  backgroundColor: isCurrentInning ? 'rgba(86, 150, 246, 0.12)' : 'transparent',
+  color: isCurrentInning ? 'black' : '#999',
+  padding: '6px 12px',
+  borderLeft: '1px solid #ccc',
+  width: '40px',
+  boxSizing: 'border-box',
+  textAlign: 'center'
 });
+
+const inningText = {
+  opacity: 0.4,
+  fontWeight: 500,
+  textTransform: 'uppercase',
+  fontSize: '14px',
+  width: 100
+};
 
 const loadBoard = async (boardId, dispatch) => {
   const [response, responseBody] = await Network.get(
@@ -192,7 +229,7 @@ const updateBoard = async (boardId, dispatch) => {
   const [response, responseBody] = await Network.get(
     `get-existing-board/${boardId}`
   );
-  const { red, blue, redGuesses, blueGuesses, turnCount, words } = responseBody;
+  const { red, blue, redGuesses, blueGuesses, turnCount } = responseBody;
   const allIncorrectGuesses = findIncorrectGuesses(
     red,
     blueGuesses || []
@@ -200,7 +237,6 @@ const updateBoard = async (boardId, dispatch) => {
   dispatch({
     type: 'update',
     state: {
-      words,
       localTurnCount: turnCount,
       incorrectGuesses: allIncorrectGuesses,
       redGuesses: redGuesses || [],
@@ -269,56 +305,27 @@ const PlayerBoard = ({ match }) => {
     }
   }, [showModal]);
 
-  const turnText = (() => {
-    // blue gives clue
-    let text = '';
+  const isUserGivingClue =
+    (localTurnCount % 2 === 0 && userTeam === 'blue') ||
+    (localTurnCount % 2 === 1 && userTeam === 'red');
 
+  const teamColor = userTeam === 'blue' ? '🔷' : '🔴';
+  const turnText = (() => {
     if (!userTeam) {
       return 'Choose your team...';
     }
-
-    if (localTurnCount % 2 === 0) {
-      if (userTeam === 'blue') {
-        text = '🔷 Give a clue!';
-      } else {
-        text = "🔴 It's your turn to guess!";
-      }
+    if (showCheatsheet) {
+      return `${teamColor} Viewing cheatsheet`;
     }
-    // red gives clue
-    else if (userTeam === 'red') {
-      text = '🔴 Give a clue!';
-    } else {
-      text = "🔷 It's your turn to guess!";
+    if (isUserGivingClue) {
+      return `${teamColor} Give a clue`;
     }
-    return text;
+    return `${teamColor} It's your turn to guess`;
   })();
 
   // handle edit words
   const handleEditWords = () => {
     dispatch({ type: 'toggle_swap_mode' });
-  };
-
-  // handle reset board
-  const handleResetAnswers = () => {
-    dispatch({ type: 'reset_turn_guesses' });
-
-    // sets turn count to 1 and current turn guesses to none
-    Network.post('update-turn', {
-      id,
-      turnCount: 1
-    });
-
-    // resets player guesses
-    Network.post('update-guesses', {
-      id,
-      team: 'red',
-      guesses: []
-    });
-    Network.post('update-guesses', {
-      id,
-      team: 'blue',
-      guesses: []
-    });
   };
 
   const handleAttemptGuess = index => {
@@ -358,18 +365,45 @@ const PlayerBoard = ({ match }) => {
 
   const Dots = ({ total, turnCount, className }) => {
     const totalDots = new Array(total).fill(false);
-    const allDots = totalDots.map((dot, index) => index < turnCount);
+    const dotsWithId = totalDots.map((item, i) => i + 1);
+    const redTurns = dotsWithId.filter((element, index) => {
+      return index % 2 === 1;
+    });
+    const blueTurns = dotsWithId.filter((element, index) => {
+      return index % 2 === 0;
+    });
     return (
-      <div css={{ display: 'flex', flexWrap: 'nowrap' }} className={className}>
-        {allDots.map(isSelected => (
-          <div css={dot(isSelected)} />
-        ))}
+      <div className={className}>
+        <div css={[inningRow, { borderBottom: '1px solid #ccc' }]}>
+          <p css={inningText}>Blue</p>
+          {blueTurns.map(id => (
+            <div css={inning(turnCount === id)}>
+              {id < turnCount ? '✓' : '-'}
+            </div>
+          ))}
+        </div>
+        <div css={inningRow}>
+          <p css={inningText}>Red turns</p>
+          <div css={inningRow}>
+            {redTurns.map(id => (
+              <div css={inning(turnCount === id)}>
+                {id < turnCount ? '✓' : '-'}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
 
   return (
-    <div>
+    <div
+      css={{
+        backgroundColor: showCheatsheet ? 'white' : '#eee',
+        minHeight: '100vh',
+        boxSizing: 'border-box'
+      }}
+    >
       {!userTeam && (
         <div css={pageFade}>
           <div css={modal}>
@@ -423,70 +457,73 @@ const PlayerBoard = ({ match }) => {
               total={7}
               css={{ marginRight: 8 }}
             />
-            <strong>
-              <p>{localTurnCount}/7</p>
-            </strong>
-            <button
-              css={absolutePassTurn(currentTurnGuesses)}
-              onClick={() => {
-                Network.post(`update-turn`, {
-                  id,
-                  turnCount: localTurnCount + 1
-                });
-                dispatch({ type: 'increment_turn' });
-                dispatch({ type: 'reset_turn_guesses' });
-              }}
-            >
-              End turn
-            </button>
+            {!showCheatsheet && isUserGivingClue ? (
+              <button css={[turnButton, waitingStyle]}>Waiting...</button>
+            ) : !showCheatsheet ? (
+              <button
+                css={[turnButton, endTurnStyle(currentTurnGuesses)]}
+                onClick={() => {
+                  Network.post(`update-turn`, {
+                    id,
+                    turnCount: localTurnCount + 1
+                  });
+                  dispatch({ type: 'increment_turn' });
+                  dispatch({ type: 'reset_turn_guesses' });
+                }}
+              >
+                {isUserGivingClue ? 'Waiting...' : 'End turn'}
+              </button>
+            ) : null}
           </div>
         </div>
 
         <Cards
           refreshCard={refreshCard}
           state={state}
+          isUserGivingClue={isUserGivingClue}
           dispatch={dispatch}
           handleAttemptGuess={handleAttemptGuess}
           handleReplaceWord={handleReplaceWord}
         />
 
         {/* BOTTOM ACTIONS */}
-        {userTeam === 'red' ? (
-          <button
-            css={buttonStyle(userTeam === 'red' && showCheatsheet)}
-            onClick={() => dispatch({ type: 'toggle_cheatsheet' })}
-          >
-            <span role="img" aria-label="Red circle">
-              🔴
-            </span>{' '}
-            Red cheatsheet
-          </button>
-        ) : (
+        <div css={bottomBar}>
+          <div>
+            {userTeam === 'red' ? (
+              <button
+                css={[
+                  buttonStyle(showCheatsheet),
+                  cheatsheetButton(showCheatsheet)
+                ]}
+                onClick={() => dispatch({ type: 'toggle_cheatsheet' })}
+              >
+                Red cheatsheet
+              </button>
+            ) : (
+              <button
+                css={[
+                  buttonStyle(showCheatsheet),
+                  cheatsheetButton(showCheatsheet)
+                ]}
+                onClick={() => dispatch({ type: 'toggle_cheatsheet' })}
+              >
+                Blue cheatsheet
+              </button>
+            )}
+
             <button
-              css={buttonStyle(userTeam === 'blue' && showCheatsheet)}
-              onClick={() => dispatch({ type: 'toggle_cheatsheet' })}
+              css={buttonStyle(editWordsMode)}
+              onClick={() => handleEditWords()}
             >
-              <span role="img" aria-label="Blue diamond">
-                🔷
-            </span>{' '}
-            Blue cheatsheet
+              Edit words
             </button>
-          )}
-
-        <button
-          css={buttonStyle(editWordsMode)}
-          onClick={() => handleEditWords()}
-        >
-          Edit words
-        </button>
-
-        <button css={buttonStyle()} onClick={() => handleResetAnswers()}>
-          Reset answers
-        </button>
-
-        <Link to="/new">
-          <button css={buttonStyle()}>New board</button>
-        </Link>
+          </div>
+          <Link to="/new">
+            <button css={[buttonStyle(), { marginRight: 0 }]}>
+              New board →
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );

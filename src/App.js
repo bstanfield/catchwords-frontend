@@ -8,7 +8,7 @@ import { jsx } from '@emotion/core';
 import Home from './routes/Home';
 import { scale } from './style/scale';
 
-const serif = 'Fira Sans, system-ui, Helvetica, Arial, sans-serif !important';
+const serif = 'Work Sans, system-ui, Helvetica, Arial, sans-serif !important';
 
 const universalStyles = scale({
   fontFamily: serif,
